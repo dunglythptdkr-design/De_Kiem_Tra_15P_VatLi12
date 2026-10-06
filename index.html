@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIỂM TRA 15 PHÚT – VẬT LÍ 12 – BÀI 1 ĐẾN BÀI 4</title>
+    <style>
+        :root { --primary: #2980b9; --success: #27ae60; --danger: #c0392b; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 10px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2, h3 { text-align: center; color: var(--primary); }
+        
+        .info-group { margin-bottom: 15px; }
+        .info-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .info-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
+        
+        #top-bar { position: sticky; top: 0; background: #fff; padding: 15px 0; z-index: 100; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .timer { font-size: 24px; font-weight: bold; color: var(--danger); }
+        .progress-container { width: 60%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+        
+        .section-title { background: var(--primary); color: #fff; padding: 12px; border-radius: 5px; margin: 30px 0 15px 0; font-weight: bold; font-size: 18px; text-transform: uppercase; }
+        .question-box { background: #fafafa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .question-title { font-weight: bold; margin-bottom: 12px; font-size: 16px; }
+        .options label { display: block; margin-bottom: 8px; cursor: pointer; padding: 8px; border-radius: 4px; transition: background 0.2s; }
+        .options label:hover { background: #eef2f5; }
+        
+        .tf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .tf-table th, .tf-table td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        .tf-table td:first-child { text-align: left; }
+        
+        .short-answer { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        .btn-submit { width: 100%; background: var(--success); color: white; border: none; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px; text-transform: uppercase; }
+        .btn-submit:hover { background: #219150; }
+        
+        #resultScreen { display: none; }
+        .total-score-card { background-color: #e8f4f8; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; border: 2px dashed var(--primary); }
+        .score-number { font-size: 60px; color: var(--danger); font-weight: bold; line-height: 1; margin-top: 10px; }
+        .part-result { background: #fff; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        .part-result p { font-weight: bold; margin: 0 0 10px 0; color: var(--primary); }
+        .part-result ul { margin: 0; padding-left: 20px; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    
+    <div id="quizScreen">
+        <h1>KIỂM TRA 15 PHÚT – VẬT LÍ 12</h1>
+        <h3>Nội dung: Bài 1 đến Bài 4</h3>
+        
+        <form id="mainForm" onsubmit="event.preventDefault(); submitQuiz();">
+            <div class="info-group">
+                <label>Họ và tên thí sinh:</label>
+                <input type="text" name="fullName" id="fullName" required placeholder="Nhập họ và tên...">
+            </div>
+            <div class="info-group">
+                <label>Lớp:</label>
+                <input type="text" name="className" id="className" required placeholder="Ví dụ: 12A1">
+            </div>
+
+            <div id="top-bar" class="hidden">
+                <div class="timer">⏱ <span id="timerDisplay">50:00</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+
+            <button type="button" id="startBtn" class="btn-submit" style="background: var(--primary);" onclick="startQuiz()">BẮT ĐẦU LÀM BÀI</button>
+
+            <div id="quizContent" class="hidden">
+                <div id="questionsContainer"></div>
+                <button type="submit" class="btn-submit" id="submitBtn">NỘP BÀI</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="resultScreen">
+        <h2>HOÀN THÀNH BÀI KIỂM TRA</h2>
+        
+        <p>Họ và tên: <strong id="resName"></strong></p>
+        <p>Lớp: <strong id="resClass"></strong></p>
+
+        <div class="part-result">
+            <p>Phần I: Trắc nghiệm nhiều phương án</p>
+            <ul>
+                <li>Đúng: <strong id="resP1C">0</strong>/18</li>
+                <li>Điểm: <strong id="resP1S">0</strong>/4,5</li>
+            </ul>
+        </div>
+
+        <div class="part-result">
+            <p>Phần II: Trắc nghiệm Đúng/Sai</p>
+            <ul>
+                <li>Đúng: <strong id="resP2C">0</strong>/16 ý</li>
+                <li>Điểm: <strong id="resP2S">0</strong>/4,0</li>
+            </ul>
+        </div>
+
+        <div class="part-result">
+            <p>Phần III: Trắc nghiệm trả lời ngắn</p>
+            <ul>
+                <li>Đúng: <strong id="resP3C">0</strong>/6</li>
+                <li>Điểm: <strong id="resP3S">0</strong>/1,5</li>
+            </ul>
+        </div>
+
+        <p style="font-size: 18px;">Tổng số đáp án/ý đúng: <strong id="resTotalCorrect">0/40</strong></p>
+
+        <div class="total-score-card">
+            <h3>TỔNG ĐIỂM</h3>
+            <div class="score-number"><span id="resTotalScore">0</span><span style="font-size: 30px; color: #333;">/10</span></div>
+        </div>
+
+        <p>Thời gian làm bài: <strong id="resDuration"></strong></p>
+        <p>Trạng thái gửi kết quả: <strong id="resStatus" style="color: var(--primary);">Đang chuẩn bị gửi...</strong></p>
+    </div>
+
+</div>
+
+<audio id="audioSubmit" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+
+<script>
+    // ==========================================
+    // 1. CẤU HÌNH LIÊN KẾT GOOGLE SHEETS
+    // ==========================================
+    // [DÁN GOOGLE_SCRIPT_URL VÀO ĐÂY]
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPjBHyO8BnljpmxKFGJfvGHCk1NfW7qKqEV7Zi1PGWUxlNCH7MVAC0WFTAavyBpi6o/exec"; 
+
+    // ==========================================
+    // 2. DỮ LIỆU CÂU HỎI & ĐÁP ÁN
+    // ==========================================
+    const questionsData = {
+        part1: [
+            { prompt: "Ở thể rắn, các phân tử cấu tạo nên vật:", options: ["dao động quanh vị trí cân bằng cố định.", "chuyển động hỗn loạn không ngừng.", "dao động quanh vị trí cân bằng di chuyển.", "đứng yên tuyệt đối."], answer: "A" },
+            { prompt: "Quá trình chất chuyển từ thể lỏng sang thể khí được gọi là:", options: ["Sự nóng chảy.", "Sự đông đặc.", "Sự hoá hơi.", "Sự ngưng tụ."], answer: "C" },
+            { prompt: "Hiện tượng bay hơi là quá trình hoá hơi xảy ra ở:", options: ["nhiệt độ sôi của chất lỏng.", "một nhiệt độ xác định.", "mọi nhiệt độ trên bề mặt chất lỏng.", "trong toàn bộ khối chất lỏng."], answer: "C" },
+            { prompt: "Nội năng của một vật là:", options: ["tổng động năng và thế năng của vật.", "tổng động năng và thế năng của các phân tử cấu tạo nên vật.", "nhiệt lượng vật nhận được trong quá trình truyền nhiệt.", "công mà vật thực hiện được."], answer: "B" },
+            { prompt: "Hai cách cơ bản làm thay đổi nội năng của một vật là:", options: ["ma sát và nung nóng.", "truyền nhiệt và làm lạnh.", "nén và giãn vật.", "thực hiện công và truyền nhiệt."], answer: "D" },
+            { prompt: "Theo nguyên lí 1 Nhiệt động lực học, độ biến thiên nội năng &Delta;U được tính bằng biểu thức:", options: ["&Delta;U = A - Q", "&Delta;U = Q - A", "&Delta;U = A + Q", "&Delta;U = Q / A"], answer: "C" },
+            { prompt: "Quy ước về dấu nào sau đây là đúng với nguyên lí 1 Nhiệt động lực học?", options: ["Q > 0: hệ truyền nhiệt cho môi trường.", "Q < 0: hệ nhận nhiệt lượng từ môi trường.", "A > 0: hệ nhận công từ môi trường.", "A < 0: hệ nhận công từ môi trường."], answer: "C" },
+            { prompt: "Trong nhiệt giai Celsius, nhiệt độ nước đá đang tan ở áp suất tiêu chuẩn là:", options: ["0&deg;C", "100&deg;C", "273 K", "32&deg;F"], answer: "A" },
+            { prompt: "Mối liên hệ giữa nhiệt độ T (Kelvin) và nhiệt độ t (&deg;C) là:", options: ["T = t + 273", "t = T + 273", "T = t - 273", "T = 273 - t"], answer: "A" },
+            { prompt: "Công thức tính nhiệt lượng toả ra hay thu vào khi nhiệt độ của vật thay đổi là:", options: ["Q = mc&Delta;t", "Q = &lambda;m", "Q = Lm", "Q = Vc&Delta;t"], answer: "A" },
+            { prompt: "Đơn vị đo của nhiệt dung riêng trong hệ SI là:", options: ["J", "J/kg", "J/kg.K", "J.kg/K"], answer: "C" },
+            { prompt: "Nhiệt nóng chảy riêng của chất rắn là nhiệt lượng cần thiết để:", options: ["1 kg chất rắn nóng lên thêm 1&deg;C", "làm nóng chảy hoàn toàn một vật rắn.", "1 kg chất rắn nóng chảy hoàn toàn ở nhiệt độ nóng chảy.", "1 kg chất lỏng biến thành hơi."], answer: "C" },
+            { prompt: "Đơn vị của nhiệt nóng chảy riêng là:", options: ["J/kg", "J/kg.K", "J/&deg;C", "J"], answer: "A" },
+            { prompt: "Một hệ nhận nhiệt lượng 50 J từ nguồn nhiệt và thực hiện công 30 J lên môi trường ngoài. Độ biến thiên nội năng của hệ là:", options: ["80 J", "20 J", "-20 J", "-80 J"], answer: "B" },
+            { prompt: "Mức nhiệt độ 20&deg;C tương ứng với bao nhiêu độ trong thang Kelvin?", options: ["253 K", "293 K", "20 K", "-253 K"], answer: "B" },
+            { prompt: "Nhiệt dung riêng của một chất cho biết:", options: ["nhiệt lượng cần để làm nóng chảy 1 kg chất đó.", "nhiệt lượng cần truyền để 1 kg chất đó tăng thêm 1&deg;C.", "tổng nhiệt lượng mà vật chứa bên trong.", "khả năng toả nhiệt của vật ra môi trường."], answer: "B" },
+            { prompt: "Cung cấp một nhiệt lượng 4180 J cho 1 kg nước thì nhiệt độ của nước tăng thêm bao nhiêu? (Biết c = 4180 J/kg.K)", options: ["1&deg;C", "2&deg;C", "10&deg;C", "100&deg;C"], answer: "A" },
+            { prompt: "Sự truyền nhiệt tự phát chỉ xảy ra giữa hai vật khi:", options: ["chúng có nhiệt độ khác nhau.", "chúng có khối lượng khác nhau.", "chúng ở cùng một thể (rắn, lỏng, hoặc khí).", "chúng có cùng mức nội năng."], answer: "A" }
+        ],
+        part2: [
+            { prompt: "Đun nóng một khối nước đá đang tan ở 0&deg;C trong điều kiện áp suất tiêu chuẩn.", items: ["a) Nhiệt độ của khối nước đá tăng dần trong quá trình nóng chảy.", "b) Nội năng của hệ (nước đá và nước lỏng) tăng lên.", "c) Nhiệt lượng cung cấp cho hệ lúc này chủ yếu dùng để phá vỡ các liên kết giữa các phân tử.", "d) Động năng trung bình của các phân tử nước tăng liên tục trong suốt quá trình tan."], answers: ["False", "True", "True", "False"] },
+            { prompt: "Áp dụng nguyên lí I Nhiệt động lực học cho một lượng khí trong xilanh.", items: ["a) Khi khối khí bị nén bởi piston, hệ nhận công (A > 0).", "b) Khi khối khí truyền nhiệt cho môi trường xung quanh, Q > 0.", "c) Nếu khối khí giãn nở đẳng nhiệt (nhiệt độ không đổi, &Delta;U = 0), hệ đang nhận nhiệt lượng.", "d) Biểu thức &Delta;U = Q áp dụng cho quá trình hệ thực hiện công mà không trao đổi nhiệt."], answers: ["True", "False", "True", "False"] },
+            { prompt: "Xét các thang nhiệt độ và sự chuyển đổi giữa chúng.", items: ["a) Thang nhiệt độ Kelvin không có các giá trị nhiệt độ âm.", "b) Độ biến thiên nhiệt độ 1 K có độ lớn bằng đúng độ biến thiên nhiệt độ 1&deg;C.", "c) Nhiệt độ sôi của nước tinh khiết ở áp suất tiêu chuẩn là 373 K.", "d) Mức nhiệt độ 100&deg;F tương đương với mức nhiệt 100&deg;C."], answers: ["True", "True", "True", "False"] },
+            { prompt: "Xét quá trình cung cấp năng lượng nhiệt để thay đổi trạng thái của chất.", items: ["a) Nhiệt lượng cần thiết để đun sôi hoàn toàn một ấm nước chỉ phụ thuộc vào khối lượng nước.", "b) Trong thời gian nước đang sôi, mặc dù tiếp tục cung cấp nhiệt lượng nhưng nhiệt độ của nước không thay đổi.", "c) Ở cùng điều kiện tiêu chuẩn, nhiệt hoá hơi riêng của nước lớn hơn nhiệt nóng chảy riêng của nước đá.", "d) Hệ thức Q = mL được dùng để tính nhiệt lượng toả ra khi chất khí ngưng tụ hoàn toàn thành chất lỏng ở cùng nhiệt độ."], answers: ["False", "True", "True", "True"] }
+        ],
+        part3: [
+            { prompt: "Nhiệt độ của cơ thể người bình thường đo được là 37&deg;C. Nhiệt độ này tương ứng với bao nhiêu độ K? (Lấy phần nguyên).", answer: "310" },
+            { prompt: "Một lượng khí trong xilanh nhận nhiệt lượng 100 J từ nguồn nhiệt bên ngoài và giãn nở thực hiện công 40 J đẩy piston lên. Tính độ biến thiên nội năng của khối khí (đơn vị: J).", answer: "60" },
+            { prompt: "Cần cung cấp một nhiệt lượng bao nhiêu kilo Jun (kJ) để làm nóng chảy hoàn toàn 0,5 kg đồng ở nhiệt độ nóng chảy của nó? Biết nhiệt nóng chảy riêng của đồng là 1,8.10^5 J/kg.", answer: "90" },
+            { prompt: "Nhiệt dung riêng của nước xấp xỉ là 4200 J/kg.K. Để đun nóng 2 kg nước từ 25&deg;C lên 75&deg;C thì cần cung cấp một nhiệt lượng bằng bao nhiêu kilo Jun (kJ)?", answer: "420" },
+            { prompt: "Nhiệt hoá hơi riêng của nước ở 100&deg;C là 2,26.10^6 J/kg. Để biến hoàn toàn 200 gam nước lỏng ở 100&deg;C thành hơi nước ở cùng nhiệt độ cần cung cấp nhiệt lượng bao nhiêu kilo Jun (kJ)?", answer: "452" },
+            { prompt: "Một ấm điện có công suất tiêu thụ 1000 W được dùng để đun một lượng nước ở 20&deg;C. Bỏ qua sự mất mát nhiệt ra môi trường xung quanh. Sau đúng 7 phút thì nước trong ấm bắt đầu sôi. Nhiệt lượng do ấm cung cấp cho nước trong thời gian trên bằng bao nhiêu kilo Jun (kJ)?", answer: "420" }
+        ]
+    };
+
+    // ==========================================
+    // 3. CẤU HÌNH THANG ĐIỂM CHÍNH THỨC
+    // ==========================================
+    const SCORING_CONFIG = {
+        part1: { totalItems: 18, pointsPerCorrect: 0.25, maxScore: 4.5 },
+        part2: { totalQuestions: 4, itemsPerQuestion: 4, totalItems: 16, pointsPerCorrect: 0.25, maxScorePerQuestion: 1.0, maxScore: 4.0 },
+        part3: { totalItems: 6, pointsPerCorrect: 0.25, maxScore: 1.5 },
+        totalMaxScore: 10.0
+    };
+
+    let timeLeft = 50 * 60;
+    let timerInterval;
+    let startTimeObj;
+    let isSubmitted = false;
+    let submissionId = 'sub_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+
+    function renderQuestions() {
+        const container = document.getElementById('questionsContainer');
+        let html = '';
+
+        html += `<div class="section-title">Phần I. Trắc nghiệm nhiều phương án (18 câu)</div>`;
+        questionsData.part1.forEach((q, index) => {
+            html += `<div class="question-box">
+                <div class="question-title">Câu ${index + 1}: ${q.prompt}</div>
+                <div class="options">`;
+            q.options.forEach((opt, optIndex) => {
+                let letter = String.fromCharCode(65 + optIndex);
+                html += `<label><input type="radio" name="p1_q${index}" value="${letter}" onchange="saveLocal()"> ${letter}. ${opt}</label>`;
+            });
+            html += `</div></div>`;
+        });
+
+        html += `<div class="section-title">Phần II. Trắc nghiệm Đúng/Sai (4 câu)</div>`;
+        questionsData.part2.forEach((q, index) => {
+            html += `<div class="question-box">
+                <div class="question-title">Câu ${index + 1}: ${q.prompt}</div>
+                <table class="tf-table">
+                    <tr><th>Phát biểu</th><th>Đúng</th><th>Sai</th></tr>`;
+            q.items.forEach((item, itemIndex) => {
+                let letter = String.fromCharCode(97 + itemIndex);
+                html += `<tr>
+                    <td>${item}</td>
+                    <td><input type="radio" name="p2_q${index}_i${itemIndex}" value="True" onchange="saveLocal()"></td>
+                    <td><input type="radio" name="p2_q${index}_i${itemIndex}" value="False" onchange="saveLocal()"></td>
+                </tr>`;
+            });
+            html += `</table></div>`;
+        });
+
+        html += `<div class="section-title">Phần III. Trắc nghiệm trả lời ngắn (6 câu)</div>`;
+        questionsData.part3.forEach((q, index) => {
+            html += `<div class="question-box">
+                <div class="question-title">Câu ${index + 1}: ${q.prompt}</div>
+                <input type="text" name="p3_q${index}" class="short-answer" placeholder="Nhập kết quả..." oninput="saveLocal()">
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function startQuiz() {
+        if(!document.getElementById('fullName').value || !document.getElementById('className').value) {
+            alert("Vui lòng nhập Họ tên và Lớp trước khi làm bài!");
+            return;
+        }
+        document.getElementById('startBtn').classList.add('hidden');
+        document.getElementById('top-bar').classList.remove('hidden');
+        document.getElementById('quizContent').classList.remove('hidden');
+        
+        document.getElementById('fullName').readOnly = true;
+        document.getElementById('className').readOnly = true;
+
+        startTimeObj = new Date();
+        renderQuestions();
+        loadLocal();
+        
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0' + s : s}`;
+        
+        let percent = ((50 * 60 - timeLeft) / (50 * 60)) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("Đã hết 50 phút! Hệ thống tự động nộp bài.");
+            submitQuiz();
+        }
+    }
+
+    function saveLocal() {
+        const formData = new FormData(document.getElementById('mainForm'));
+        const data = Object.fromEntries(formData.entries());
+        localStorage.setItem('vatli12_quiz', JSON.stringify(data));
+    }
+
+    function loadLocal() {
+        const saved = localStorage.getItem('vatli12_quiz');
+        if (saved) {
+            const data = JSON.parse(saved);
+            Object.keys(data).forEach(key => {
+                const els = document.getElementsByName(key);
+                if(els.length > 0) {
+                    if (els[0].type === 'radio') {
+                        let radio = document.querySelector(`input[name="${key}"][value="${data[key]}"]`);
+                        if(radio) radio.checked = true;
+                    } else {
+                        els[0].value = data[key];
+                    }
+                }
+            });
+        }
+    }
+
+    function calculateScore(formDataObj) {
+        let p1c = 0, p2c = 0, p3c = 0;
+        let ans1 = [], ans2 = [], ans3 = [];
+
+        for (let i = 0; i < SCORING_CONFIG.part1.totalItems; i++) {
+            let val = formDataObj[`p1_q${i}`] || "";
+            ans1.push(val);
+            if (val === questionsData.part1[i].answer) p1c++;
+        }
+
+        for (let i = 0; i < SCORING_CONFIG.part2.totalQuestions; i++) {
+            let qArr = [];
+            for (let j = 0; j < SCORING_CONFIG.part2.itemsPerQuestion; j++) {
+                let val = formDataObj[`p2_q${i}_i${j}`] || "";
+                qArr.push(val);
+                if (val === questionsData.part2[i].answers[j]) p2c++;
+            }
+            ans2.push(qArr);
+        }
+
+        for (let i = 0; i < SCORING_CONFIG.part3.totalItems; i++) {
+            let val = (formDataObj[`p3_q${i}`] || "").trim().toLowerCase();
+            ans3.push(val);
+            let correct = questionsData.part3[i].answer.toString().trim().toLowerCase();
+            if (val === correct && val !== "") p3c++;
+        }
+
+        let p1Score = Math.round((p1c * SCORING_CONFIG.part1.pointsPerCorrect) * 100) / 100;
+        let p2Score = Math.round((p2c * SCORING_CONFIG.part2.pointsPerCorrect) * 100) / 100;
+        let p3Score = Math.round((p3c * SCORING_CONFIG.part3.pointsPerCorrect) * 100) / 100;
+        let tScore = Math.round((p1Score + p2Score + p3Score) * 100) / 100;
+
+        return { 
+            p1c, p1Score, p2c, p2Score, p3c, p3Score, 
+            tCorrect: p1c + p2c + p3c, 
+            tScore, ans1, ans2, ans3 
+        };
+    }
+
+    async function submitQuiz() {
+        if(isSubmitted) return;
+        isSubmitted = true;
+        clearInterval(timerInterval);
+        
+        try { document.getElementById('audioSubmit').play(); } catch(e){}
+
+        const endTimeObj = new Date();
+        const durationSec = (50 * 60) - timeLeft;
+        let m = Math.floor(durationSec / 60);
+        let s = durationSec % 60;
+        const durationStr = `${m} phút ${s} giây`;
+
+        const formData = new FormData(document.getElementById('mainForm'));
+        const formDataObj = Object.fromEntries(formData.entries());
+        const scoreData = calculateScore(formDataObj);
+
+        document.getElementById('quizScreen').classList.add('hidden');
+        document.getElementById('resultScreen').style.display = 'block';
+        window.scrollTo(0,0);
+
+        document.getElementById('resName').innerText = document.getElementById('fullName').value;
+        document.getElementById('resClass').innerText = document.getElementById('className').value;
+        
+        document.getElementById('resP1C').innerText = scoreData.p1c;
+        document.getElementById('resP1S').innerText = scoreData.p1Score;
+        
+        document.getElementById('resP2C').innerText = scoreData.p2c;
+        document.getElementById('resP2S').innerText = scoreData.p2Score;
+        
+        document.getElementById('resP3C').innerText = scoreData.p3c;
+        document.getElementById('resP3S').innerText = scoreData.p3Score;
+        
+        document.getElementById('resTotalCorrect').innerText = scoreData.tCorrect + "/40";
+        document.getElementById('resTotalScore').innerText = scoreData.tScore;
+        
+        document.getElementById('resDuration').innerText = durationStr;
+
+        localStorage.removeItem('vatli12_quiz');
+
+        const payload = {
+            fullName: document.getElementById('fullName').value,
+            className: document.getElementById('className').value,
+            startTime: startTimeObj.toLocaleString('vi-VN'),
+            submitTime: endTimeObj.toLocaleString('vi-VN'),
+            duration: durationStr,
+            submissionId: submissionId,
+            ans1: scoreData.ans1,
+            ans2: scoreData.ans2,
+            ans3: scoreData.ans3
+        };
+
+        sendToSheets(payload, 3);
+    }
+
+    async function sendToSheets(payload, retries) {
+        const statusEl = document.getElementById('resStatus');
+        statusEl.innerText = "Đang gửi dữ liệu lên hệ thống...";
+        statusEl.style.color = "blue";
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const res = await response.json();
+            if(res.status === 'success'){
+                statusEl.innerText = "GỬI KẾT QUẢ THÀNH CÔNG!";
+                statusEl.style.color = "green";
+            } else {
+                throw new Error("Server error");
+            }
+        } catch (error) {
+            if(retries > 0) {
+                statusEl.innerText = `Lỗi mạng. Đang thử lại lần ${4 - retries}...`;
+                statusEl.style.color = "orange";
+                setTimeout(() => sendToSheets(payload, retries - 1), 2000);
+            } else {
+                statusEl.innerText = "GỬI THẤT BẠI. Vui lòng chụp màn hình kết quả này gửi cho giáo viên!";
+                statusEl.style.color = "red";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
